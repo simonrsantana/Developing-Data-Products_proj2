@@ -1,0 +1,54 @@
+---
+title: 'Developing Data Products: Week 2 Project'
+author: "Simon Rodriguez"
+date: "October 20, 2017"
+output: html_document
+---
+
+```{r preproc, echo = F, message=F, warning=F}
+setwd("/home/simon/Escritorio/test/")
+```
+
+This code locates in the map all the peaks higher than 1500m and assigns a color code depending on their height. Clicking on each peak, the height and the name can be seen.
+
+```{r read, echo = F, message=F, warning=F}
+# If you want to download the same information, go to:
+# http://viewfinderpanoramas.org/prominence.html
+
+# Locations and names of mountains all around the world higher than 1500m
+places <- read.csv("1500.csv", header = T)
+places$Lat_dec = as.numeric(as.character(places$Lat_dec))
+places$Long_dec = as.numeric(as.character(places$Long_dec))
+places["Class"] <- c()
+attach(places)
+
+# Create the color codes
+places$Class[(Elevation >= 8000)] <- "DarkRed"
+places$Class[(Elevation >= 7000) & (Elevation < 8000)] <- "Red"
+places$Class[(Elevation >= 6000) & (Elevation < 7000)] <- "Orange"
+places$Class[(Elevation >= 5000) & (Elevation < 6000)] <- "Yellow"
+places$Class[(Elevation >= 4000) & (Elevation < 5000)] <- "Blue"
+places$Class[(Elevation >= 3000) & (Elevation < 4000)] <- "DeepGreen"
+places$Class[(Elevation >= 2000) & (Elevation < 3000)] <- "Green"
+places$Class[Elevation < 2000] <- "LightGreen"
+
+# Name + height column
+places$info = paste(places$Name, "-", paste0(places$Elevation,"m"))
+
+# Create the new (clean) dataframe
+newPlaces <- data.frame(lat = places$Lat_dec, lng = places$Long_dec, class = places$Class, info = places$info)
+```
+
+Now we can create the map and locate the peaks
+
+```{r map, echo = F, message=F, warning=F}
+# Create the map with leafled
+library(leaflet)
+
+newPlaces %>% 
+  leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers(weight = 1, color = newPlaces$class, popup = newPlaces$info) %>%
+  addLegend(labels = c("1K m", "2K m", "3K m", "4K m", "5K m", "6K m", "7K m", "8K m"), colors = c("lightgreen", "green", "darkgreen", "blue", "yellow", "orange", "red", "darkred"))
+```
+
